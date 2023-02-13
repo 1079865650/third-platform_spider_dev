@@ -1,5 +1,3 @@
-import sys
-
 import scrapy
 
 from scrapy import Request
@@ -38,16 +36,12 @@ class SpiderManoSpider(scrapy.Spider):
 
     session = sessionmaker(bind=engine) 
     sess = session() 
-    Base = declarative_base() 
-    Base.metadata.schema = 'spider'
+    # Base = declarative_base()
+    # Base.metadata.schema = 'spider'
     #动态创建orm类,必须继承Base, 这个表名是固定的,如果需要为每个爬虫创建一个表,请使用process_item中的
-    CategoryTask = type('task',(Base,TaskTemplate),{'__tablename__':'sp_plat_site_task'})
+    # CategoryTask = type('task',(Base,TaskTemplate),{'__tablename__':'sp_plat_site_task'})
     # 换站点需要修改
-    # categorytasks = sess.query(CategoryTask.id, CategoryTask.category_link, CategoryTask.task_code, CategoryTask.plat, CategoryTask.site, CategoryTask.link_maxpage)\
-    #     .filter(and_(CategoryTask.status == None, CategoryTask.plat == 'Mano')).distinct()
-    categorytasks = sess.query(CategoryTask.id, CategoryTask.category_link, CategoryTask.task_code, CategoryTask.plat,
-                               CategoryTask.site, CategoryTask.link_maxpage) \
-        .filter(and_(CategoryTask.plat == 'Mano', CategoryTask.status == None)).distinct()
+    categorytasks = sess.query(CategoryTask.id, CategoryTask.category_link, CategoryTask.task_code, CategoryTask.plat, CategoryTask.site, CategoryTask.link_maxpage).filter(and_(CategoryTask.status == None, CategoryTask.plat == 'Mano')).distinct()
     # .limit(5)
     # .all()
     sess.close()
@@ -70,32 +64,26 @@ class SpiderManoSpider(scrapy.Spider):
         'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36',
     }
-    count = 0
+
     def start_requests(self):
         task_list = []
         for category in self.categorytasks:
             for page in range(1,category.link_maxpage+1):
-            # for page in range(1, 2):
-                task_list.append({"url": category.category_link + '?page=' + str(page)
-                                     , "meta": {'id': category.id, 'task_code': category.task_code
-                        , 'plat': category.plat, 'site': category.site, 'page': page}})
-        global count
-        count = len(task_list)
-        print(count)
+                task_list.append({"url": category.category_link.replace('#_his_','') + '?page=' + str(page), "meta": {'id': category.id, 'task_code': category.task_code, 'plat': category.plat, 'site': category.site, 'page': page}})
+        
         for t in task_list:
             yield Request(url = t['url'], callback=self.parse, meta= t['meta'], headers = self.headers_html)
 
     def parse(self, response):
-        global count
-        count -= 1
-        print(count)
+        # if response.status == 202:
+        #     yield scrapy.Request(response.url, callback=self.parse, meta = response.meta, dont_filter=True)
+        #     return
+
         id = response.meta['id']
         task_code = response.meta['task_code']
         plat = response.meta['plat']
-
         site = response.meta['site']
         page = response.meta['page']
-        # site_category = site[5:7]
 
         doc = pq(response.text)
 
@@ -104,58 +92,49 @@ class SpiderManoSpider(scrapy.Spider):
 
         count = 0
 
-        for d in doc('div.tG5dru.Pjvmj0 a').items():
+        for d in doc('div.lpMain li[data-sku]').items():
             item = {}
             count += 1
-            href = d.attr('href')
-            if 'fr' in site:
-                href = 'https://www.manomano.fr' + href
-            elif 'es' in site:
-                href = 'https://www.manomano.es' + href
-            elif 'it' in site:
-                href = 'https://www.manomano.it' + href
-            asin = extract_number(href[-8:])
-            item['asin'] = asin
+            item['asin'] = d.attr('data-sku')
             item['create_time'] = datetime.now()
             item['plat'] = plat
             item['site'] = site
+
             item_cate = item.copy()
             # 换站点需要修改
-            item_cate['href'] = href
+            item_cate['href'] = d('a').attr('href').split('?')[0]
+            
             item_cate['cate_task_code'] = task_code
             item_cate['bsr_index'] = count
             item_cate_list.append(item_cate)
+        
+            if 'sponsor' in d('.c-mention').text().lower():
+                item_cate['sp_tag'] = 'sp'
 
             item_rank = item.copy()
+
             item_rank['category1'] = ''
             item_rank['rank1'] = ''
             item_rank['category2'] = ''
             item_rank['rank2'] = ''
             item_rank['page_index'] = count
             item_rank['page'] = page
-            price = d('span[data-testid="price-main"] span.AQBkgB').text() + '.' + d('span[data-testid="price-main"] span.ReBd-C').text()
-            item_rank['price'] = add_decimal(price)
-            item_rank['reviews'] = extract_number(d('div.cIGgIj.QS3HoR.l91lbd.c7fle3g').text())
-            rating = str((d('span.c4qUmiR').attr('aria-label')))[:3]
-            if '/' in rating:
-                rating = rating[:1]
-            item_rank['rating'] = rating
+
+            # 换站点需要修改
+            item_rank['price'] = price_parse(d('.hideFromPro.price').text().replace('€','.'))
+            item_rank['reviews'] = extract_alp_number(d('.c-stars-result__text').text())
+            item_rank['rating'] = extract_number(d('.c-stars-result').text().split('étoiles sur')[0])
+            
+            if 'sponsor' in d('.c-mention').text().lower():
+                item_rank['sp_tag'] = 'sp'
+
+            if 'discount à volonté' in d('.productCenterZone').text():
+                item_rank['sellertype'] = 'FBC'
+
+
             item_rank_list.append(item_rank)
 
-            # 创建一个dict item_attr  在遍历列表页时 处理asin_attr(之前在info_task处理)
-            item_attr = item.copy()
-            brand = d('img[alt]').eq(1).attr('alt')
-            item_attr['seller'] = brand
-            item_attr['brand'] = brand
-            item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-            item_attr['update_time'] = item_attr['create_time']
-            yield {'data': item_attr, 'type': 'asin_attr'}
-            # yield {'data': {'id': id}, 'type': 'asin_task'}
-
         yield {'data':{'id': id, 'page': page},'type':'category_task'}
-        # 添加详情页任务
         yield {'data':item_cate_list,'type':'asin_task_add'}
         yield {'data':item_rank_list,'type':'asin_rank'}
-
-
 

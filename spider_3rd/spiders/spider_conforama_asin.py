@@ -1,12 +1,9 @@
-import sys
-
 import scrapy
 
 from scrapy import Request
 
 from ..items import * 
-from ..db_utils import *
-from ..parse_utils import *
+from ..db_utils import * 
 
 from sqlalchemy import create_engine,Column,Integer,TIMESTAMP,Float,String,Table,MetaData
 from sqlalchemy.ext.declarative import declarative_base
@@ -37,17 +34,14 @@ class SpiderConforamaSpider(scrapy.Spider):
 
     session = sessionmaker(bind=engine)
     sess = session()
-    Base = declarative_base()
-    Base.metadata.schema = 'spider'
+    # Base = declarative_base()
+    # Base.metadata.schema = 'spider'
     #动态创建orm类,必须继承Base, 这个表名是固定的,如果需要为每个爬虫创建一个表,请使用process_item中的
-    AsinTask = type('task',(Base,AsinTaskTemplate),{'__tablename__':'sp_plat_site_asin_info_task'})
-    AsinAtrr = type('task',(Base,AsinAttrTemplate),{'__tablename__':'sp_plat_site_asin_attr'})
-    # asintasks = sess.query(AsinTask, AsinTask.id, AsinTask.asin, AsinTask.href, AsinTask.plat, AsinTask.site)\
-    #     .outerjoin(AsinAtrr, and_(AsinTask.asin == AsinAtrr.asin, AsinTask.site == AsinAtrr.site))\
-    #     .filter(and_(AsinTask.status == None, AsinTask.plat == 'Conforama', AsinAtrr.brand.is_(None))).distinct()
-    asintasks = sess.query(AsinTask, AsinTask.id, AsinTask.asin, AsinTask.href, AsinTask.plat, AsinTask.site) \
-        .outerjoin(AsinAtrr, and_(AsinTask.asin == AsinAtrr.asin, AsinTask.site == AsinAtrr.site)) \
-        .filter(and_(AsinTask.status == None, AsinTask.plat == 'Conforama')).distinct()
+    # AsinTask = type('task',(Base,AsinTaskTemplate),{'__tablename__':'sp_plat_site_asin_info_task'})
+    # AsinAtrr = type('task',(Base,AsinAttrTemplate),{'__tablename__':'sp_plat_site_asin_attr'})
+    asintasks = sess.query(AsinTask, AsinTask.id, AsinTask.asin, AsinTask.href, AsinTask.plat, AsinTask.site).outerjoin(AsinAttr, and_(AsinTask.asin == AsinAttr.asin, AsinTask.site == AsinAttr.site)).filter(and_(AsinTask.status == None, AsinTask.plat == 'Conforama', AsinAttr.brand.is_(None))).distinct()
+    # asintasks = sess.query(AsinTask, AsinTask.id, AsinTask.asin, AsinTask.href, AsinTask.plat, AsinTask.site).outerjoin(AsinAtrr, AsinTask.asin == AsinAtrr.asin, AsinTask.site == AsinAtrr.site)
+    # .filter(and_(AsinTask.status == None, AsinTask.plat == 'CD', AsinAtrr.brand.is_(None))).distinct()
 
     # .all()
     sess.close()
@@ -76,6 +70,10 @@ class SpiderConforamaSpider(scrapy.Spider):
             yield Request(url = asin.href, callback=self.parse, meta={'id': asin.id, 'asin': asin.asin,'plat': asin.plat, 'site': asin.site}, headers = self.headers_html)
 
     def parse(self, response):
+        # if response.status == 202:
+        #     yield scrapy.Request(response.url, callback=self.parse, meta = response.meta, dont_filter=True)
+        #     return
+
         id = response.meta['id']
         plat = response.meta['plat']
         site = response.meta['site']
@@ -84,24 +82,12 @@ class SpiderConforamaSpider(scrapy.Spider):
         doc = pq(response.text)
         
         item_attr = {}
-        item_rank_list = []
 
         item_attr['plat'] = plat
-        item_attr['asin'] = asin
-        # item_rank 写入 sp_plat_site_asin_rank_conforama
-        item_rank = item_attr.copy()
-        item_rank['create_time'] = datetime.now()
-        # 抓取prive,rating,reviews
-        try:
-            item_rank['price'] = extract_price(doc('div.currentPrice.typo-prix').html())
-        except:
-            item_rank['price'] = '0';
-
-        item_rank['reviews'] = extract_number(doc('div.bv_numReviews_component_container div.bv_numReviews_text').text())
-        item_rank['rating'] = doc('div.bv_avgRating_component_container.notranslate').text()
-        item_rank_list.append(item_rank)
         item_attr['site'] = site
-        item_attr['seller'] = doc('span.confoNameColor').text()
+        item_attr['asin'] = asin
+
+        item_attr['seller'] = doc('.fpSellerName').text()
         item_attr['brand'] = item_attr['seller']
 
         if 'discount à volonté' in doc('.fpCDAVLayerInfo.jsOverlay span').text():
@@ -113,5 +99,3 @@ class SpiderConforamaSpider(scrapy.Spider):
         yield {'data':item_attr,'type':'asin_attr'}
 
         yield {'data':{'id': id},'type':'asin_task'}
-
-        yield {'data':item_rank_list,'type':'asin_rank'}
