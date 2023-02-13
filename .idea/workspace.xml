@@ -4,7 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="9318aa31-51e2-4ab5-9d31-b12ff045782e" name="Changes" comment="添加mano列表页爬取和详情爬取" />
+    <list default="true" id="9318aa31-51e2-4ab5-9d31-b12ff045782e" name="Changes" comment="增加部署说明、正式环境安装说明">
+      <change beforePath="$PROJECT_DIR$/spider_3rd/db_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/spider_3rd/db_utils.py" afterDir="false" />
+    </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -18,6 +20,11 @@
     </option>
   </component>
   <component name="Git.Settings">
+    <option name="PREVIOUS_COMMIT_AUTHORS">
+      <list>
+        <option value="zhcr" />
+      </list>
+    </option>
     <option name="RECENT_BRANCH_BY_REPOSITORY">
       <map>
         <entry key="$PROJECT_DIR$" value="master" />
@@ -32,12 +39,14 @@
     <option name="stateVersion" value="1" />
   </component>
   <component name="ProjectId" id="2KOLSQYwzflKXdqdZjAKr8uZ8ST" />
-  <component name="ProjectLevelVcsManager">
-    <ConfirmationsSetting value="2" id="Add" />
-  </component>
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
     <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
   </component>
   <component name="RunManager" selected="Python.test">
     <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
@@ -137,7 +146,10 @@
       </list>
     </recent_temporary>
   </component>
-  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
+  <component name="SpellCheckerSettings" BundledDictionaries="0" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" Dictionaries="0" CorrectionsLimit="5" DefaultDictionary="application-level" UseSingleDictionary="true" />
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
   <component name="TaskManager">
     <task active="true" id="Default" summary="Default task">
       <changelist id="9318aa31-51e2-4ab5-9d31-b12ff045782e" name="Changes" comment="" />
@@ -157,6 +169,7 @@
       <workItem from="1675047994633" duration="20632000" />
       <workItem from="1675127121084" duration="13469000" />
       <workItem from="1675403600043" duration="307000" />
+      <workItem from="1676285680294" duration="324000" />
     </task>
     <task id="LOCAL-00001" summary="1">
       <created>1673842665932</created>
@@ -186,11 +199,18 @@
       <option name="project" value="LOCAL" />
       <updated>1675071439395</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="增加部署说明、正式环境安装说明">
+      <created>1676285832824</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1676285832824</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
-    <option name="version" value="3" />
+    <option name="version" value="2" />
   </component>
   <component name="Vcs.Log.Tabs.Properties">
     <option name="TAB_STATES">
@@ -214,13 +234,21 @@
         </entry>
       </map>
     </option>
+    <option name="oldMeFiltersMigrated" value="true" />
   </component>
   <component name="VcsManagerConfiguration">
     <option name="ADD_EXTERNAL_FILES_SILENTLY" value="true" />
     <MESSAGE value="1" />
     <MESSAGE value="添加conforama列表页爬取和详情爬取" />
     <MESSAGE value="添加mano列表页爬取和详情爬取" />
-    <option name="LAST_COMMIT_MESSAGE" value="添加mano列表页爬取和详情爬取" />
+    <MESSAGE value="增加部署说明、正式环境安装说明" />
+    <option name="LAST_COMMIT_MESSAGE" value="增加部署说明、正式环境安装说明" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="558" y="0" key="CommitChangelistDialog2" timestamp="1676285821159">
+      <screen x="0" y="0" width="1920" height="1040" />
+    </state>
+    <state x="558" y="0" key="CommitChangelistDialog2/-1920.0.1920.1040/0.0.1920.1040@0.0.1920.1040" timestamp="1676285821159" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/third_platform_spider$spider_cd_category.coverage" NAME="spider_cd_category Coverage Results" MODIFIED="1673849562088" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$/spider_3rd/spiders" />
