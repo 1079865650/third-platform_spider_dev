@@ -31,8 +31,10 @@ python main.py init_task
 
 示例：
 
-python main.py conforama
-python main.py mano
+python main.py conforama 
+
+python main.py mano 
+
 python main.py cd
 
 ## 调度
