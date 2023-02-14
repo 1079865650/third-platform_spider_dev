@@ -1,53 +1,33 @@
+import sys
 import scrapy
-
-from scrapy import Request
-
-from ..items import * 
-from ..db_utils import * 
-from ..parse_utils import *
-
-from sqlalchemy import create_engine,Column,Integer,TIMESTAMP,Float,String,Table,MetaData
+from sqlalchemy import create_engine, Column, Integer, TIMESTAMP, Float, String, Table, MetaData
 from sqlalchemy.ext.declarative import declarative_base
+from scrapy import Request
+from ..items import *
+from ..db_utils import *
+from ..parse_utils import *
 from sqlalchemy.orm import sessionmaker
-
 from sqlalchemy import and_
-
 from pyquery import PyQuery as pq
 from datetime import datetime
 
-# update spider.sp_plat_site_task set task_code = replace(lower(site),'.','_') || '_' || category || '_' || replace(bsr_id,' ','_');
 
-#   需要修改
 class SpiderManoSpider(scrapy.Spider):
     name = 'spider_mano_category'
-    # allowed_domains = ['www.cdiscount.com']
-    # start_urls = ['http://www.cdiscount.com/']
 
-    custom_settings = {
-        'LOG_LEVEL': 'INFO', # 日志级别
-        'DOWNLOAD_DELAY' : 5,  # 抓取延迟
-        'CONCURRENT_REQUESTS':20,  # 并发限制
-        'DOWNLOAD_TIMEOUT':60 # 请求超时
+    custom_settings = {  # 62  18 18 18  8
+        'LOG_LEVEL': 'INFO',  # 日志级别
+        'DOWNLOAD_DELAY': 5,  # 抓取延迟
+        'CONCURRENT_REQUESTS': 20,  # 并发限制
+        'DOWNLOAD_TIMEOUT': 60  # 请求超时
     }
-
-    # engine = create_engine('postgresql+psycopg2://dbspider:Xr6!g9I%40p5@172.31.6.162:5432/bidata',echo=False)#连接数据库
-
-    engine = get_engine()#连接数据库 
-
-    session = sessionmaker(bind=engine) 
-    sess = session() 
-    # Base = declarative_base()
-    # Base.metadata.schema = 'spider'
-    #动态创建orm类,必须继承Base, 这个表名是固定的,如果需要为每个爬虫创建一个表,请使用process_item中的
-    # CategoryTask = type('task',(Base,TaskTemplate),{'__tablename__':'sp_plat_site_task'})
-    # 换站点需要修改
+    engine = get_engine()  # 连接数据库
+    session = sessionmaker(bind=engine)
+    sess = session()
     categorytasks = sess.query(CategoryTask.id, CategoryTask.category_link, CategoryTask.task_code, CategoryTask.plat,
                                CategoryTask.site, CategoryTask.link_maxpage) \
         .filter(and_(CategoryTask.plat == 'Mano')).distinct()
-    # .limit(5)
-    # .all()
     sess.close()
-
     headers_html = {
         'accept': "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,image/apng,*/*;q=0.8,application/signed-exchange;v=b3;q=0.9",
         'accept-Encoding': "gzip, deflate, br",
@@ -66,42 +46,31 @@ class SpiderManoSpider(scrapy.Spider):
         'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36',
     }
-    count = 0
 
     def start_requests(self):
         task_list = []
         for category in self.categorytasks[:1]:
             # for page in range(1,category.link_maxpage+1):
             for page in range(1, 2):
-                task_list.append({"url": category.category_link + '?page=' + str(page)
-                                     , "meta": {'id': category.id, 'task_code': category.task_code
-                        , 'plat': category.plat, 'site': category.site, 'page': page}})
-        global count
-        count = len(task_list)
-        print(count)
+                task_list.append({"url": category.category_link + '?page=' + str(page),
+                                  "meta": {'id': category.id, 'task_code': category.task_code,
+                                            'plat': category.plat, 'site': category.site, 'page': page}})
         for t in task_list:
             yield Request(url=t['url'], callback=self.parse, meta=t['meta'], headers=self.headers_html)
 
     def parse(self, response):
-        global count
-        count -= 1
-        print(count)
         id = response.meta['id']
         task_code = response.meta['task_code']
         plat = response.meta['plat']
-
         site = response.meta['site']
         page = response.meta['page']
-        # site_category = site[5:7]
-
         doc = pq(response.text)
 
         item_cate_list = []
         item_rank_list = []
-
         count = 0
 
-        for d in doc('div.tG5dru.Pjvmj0 a').items():
+        for d in doc('div[data-testid="products-layout-category"] a').items():
             item = {}
             count += 1
             href = d.attr('href')
@@ -130,29 +99,25 @@ class SpiderManoSpider(scrapy.Spider):
             item_rank['rank2'] = ''
             item_rank['page_index'] = count
             item_rank['page'] = page
-            price = d('span[data-testid="price-main"] span.AQBkgB').text() + '.' + d(
-                'span[data-testid="price-main"] span.ReBd-C').text()
+            price = d('span[data-testid="price-main"] span.c5DauHw').text() + '.' + d('span[data-testid="price-main"] span.b8m9Ab').text()
             item_rank['price'] = add_decimal(price)
-            item_rank['reviews'] = extract_number(d('div.cIGgIj.QS3HoR.l91lbd.c7fle3g').text())
-            rating = str((d('span.c4qUmiR').attr('aria-label')))[:3]
+            item_rank['reviews'] = extract_number(d('div.TQmDRr.XNipqx.ses_q_.h-K90b').text())
+            rating = str((d('span.bh49LQ').attr('aria-label')))[:3]
             if '/' in rating:
                 rating = rating[:1]
             item_rank['rating'] = rating
             item_rank_list.append(item_rank)
 
-            # 创建一个dict item_attr  在遍历列表页时 处理asin_attr(之前在info_task处理)
             item_attr = item.copy()
             brand = d('img[alt]').eq(1).attr('alt')
             item_attr['seller'] = brand
             item_attr['brand'] = brand
-            item_attr['imghref'] = doc('img.BLdozk.WRaivW').attr('src')
+            item_attr['imghref'] = doc('img').attr('src')
             item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             item_attr['update_time'] = item_attr['create_time']
             yield {'data': item_attr, 'type': 'asin_attr'}
-            # yield {'data': {'id': id}, 'type': 'asin_task'}
 
         yield {'data': {'id': id, 'page': page}, 'type': 'category_task'}
-        # 添加详情页任务
         yield {'data': item_cate_list, 'type': 'asin_task_add'}
         yield {'data': item_rank_list, 'type': 'asin_rank'}
 

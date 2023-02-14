@@ -24,11 +24,12 @@ ROBOTSTXT_OBEY = False
 CONCURRENT_REQUESTS = 5
 
 # 浏览器 控件地址
-driver_path = r'F:\zhangcrworkspace\23年1月\spider_3rd\spider_3rd\chromedriver'
+# driver_path = r'F:\zhangcrworkspace\23年1月\spider_3rd\spider_3rd\chromedriver'
+driver_path = r'F:\dependency\chromedriver_win32 (109.0.5414.74)\chromedriver.exe'
 # chrome执行路径 无异常 不配置即可
-chrome_path = ''
+chrome_path = r'C:\Program Files\Google\Chrome\Application\chrome.exe'
 # 数据库环境
-db_env = 'test' # production
+db_env = 'test' # production 正式库
 # db_env = 'production'
 
 # Configure a delay for requests for the same website (default: 0)

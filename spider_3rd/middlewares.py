@@ -4,7 +4,7 @@
 # https://docs.scrapy.org/en/latest/topics/spider-middleware.html
 
 from scrapy import signals
-from settings import driver_path, chrome_path
+from .settings import driver_path, chrome_path
 # useful for handling different item types with a single interface
 from itemadapter import is_item, ItemAdapter
 
@@ -90,11 +90,15 @@ class Spider3RdDownloaderMiddleware:
         # time.sleep(4)
         # chrome_options=Options()
         # chrome_options.add_experimental_option('debuggerAddress', '127.0.0.1:9222')
-        # driver_path = r'F:\zhangcrworkspace\23年1月\spider_3rd\spider_3rd\chromedriver'            #把浏览器驱动器放在任意位置都可以
-        if chrome_path != '':
-            options.binary_location = chrome_path  # 这里是你指定浏览器的路径
+        # driver_path = r'F:\dependency\chromedriver_win32 (109.0.5414.74)\chromedriver.exe'           #把浏览器驱动器放在任意位置都可以
+        # browser_executable_path = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
+        browser_executable_path = None
+        if chrome_options != '':
+            browser_executable_path = chrome_path  # 这里是你指定浏览器的路径
+        # if chrome_path != '':
+        #     options.binary_location = chrome_path  # 这里是你指定浏览器的路径
 
-        self.driver = uc.Chrome(driver_executable_path=driver_path,options = chrome_options)
+        self.driver = uc.Chrome(driver_executable_path=driver_path,options = chrome_options, browser_executable_path=browser_executable_path)
         # self.driver = webdriver.Chrome(executable_path=driver_path)
         # self.driver = webdriver.Chrome(executable_path=driver_path,options=chrome_options);
 

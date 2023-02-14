@@ -1,8 +1,8 @@
 from sqlalchemy import create_engine,Column,Integer,TIMESTAMP,Float,String,Table,MetaData,and_
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
+from .settings import db_env
 
-from settings import db_env
 
 def get_engine():
     # 默认为测试库

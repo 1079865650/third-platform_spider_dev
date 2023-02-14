@@ -81,7 +81,7 @@ class AsinAttr(Base):
     tag3 = Column(String(100))  # 标签3
     tag4 = Column(String(100))  # 标签4
     update_time = Column(TIMESTAMP) # 更新时间
-    imghref = Column(String(255)) #图片链接
+    imghref = Column(String(255))  # 图片链接
 
 # '__tablename__':'sp_plat_site_asin_rank_cd'
 
