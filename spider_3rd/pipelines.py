@@ -62,7 +62,7 @@ class AsinSpidersPipeline(object):
         self.AsinAttr = AsinAttr
         self.AsinRankCD = AsinRankCD
         self.AsinRankMano = AsinRankMano
-        self.AsinRankConforame = AsinRankConforame
+        self.AsinRankConforama = AsinRankConforama
 
     def process_item(self,item,spider):#爬取过程中执行的函数
 
@@ -87,8 +87,22 @@ class AsinSpidersPipeline(object):
                     self.sess.add(self.AsinRankCD(**i))
                     self.sess.commit()
                 if i['plat'] == 'Conforama':
-                    self.sess.add(self.AsinRankConforame(**i))
-                    self.sess.commit()
+                    # 判断asin_rank 是列表页抓取还是详情页抓取  详情页有price,rating 列表页没有
+                    if 'price' in i and 'rating' in i:
+                        # 给price一个默认值
+                        if i["price"] == None:
+                            i["price"] = '0'
+                            # 从asin_rank中修改表数据  列表页已经写入了一部分数据
+                        self.sess.query(self.AsinRankConforama).filter(and_(self.AsinRankConforama.plat == i['plat'],
+                                                                            self.AsinRankConforama.asin == i['asin'],
+                                                                            self.AsinRankConforama.create_time > datetime.now().strftime("%Y-%m-%d")
+                                                                            )) \
+                            .update({"price": i['price'], "rating": i['rating'], "reviews": i['reviews']})
+                        # self.sess.add(self.AsinRankConforame(**i))
+                        self.sess.commit()
+                    else:
+                        self.sess.add(self.AsinRankConforama(**i))
+                        self.sess.commit()
                 if i['plat'] == 'Mano':
                     self.sess.add(self.AsinRankMano(**i))
                     self.sess.commit()

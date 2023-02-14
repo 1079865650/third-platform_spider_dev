@@ -73,37 +73,42 @@ class SpiderConforamaSpider(scrapy.Spider):
             yield Request(url = t['url'], callback=self.parse, meta= t['meta'], headers = self.headers_html)
 
     def parse(self, response):
-        # if response.status == 202:
-        #     yield scrapy.Request(response.url, callback=self.parse, meta = response.meta, dont_filter=True)
-        #     return
-
         id = response.meta['id']
         task_code = response.meta['task_code']
         plat = response.meta['plat']
         site = response.meta['site']
         page = response.meta['page']
-
+        # print(type(response))   <class 'scrapy.http.response.html.HtmlResponse'>
+        # print(type(response.text))   <class 'str'>
         doc = pq(response.text)
-
+        # <class 'pyquery.pyquery.PyQuery'>
         item_cate_list = []
         item_rank_list = []
-
         count = 0
+        # 可以取到值doc('div#hits li[data-id]')  之前由于页面没有完全记载 就发出请求 所以没有取到值
+        # b = doc('div#hits li[data-id]')
+        # print(b)
 
-        for d in doc('div.lpMain li[data-sku]').items():
+        for d in doc('div.awk-descent-products.grid li[data-id]').items():
+            # print(d)
             item = {}
             count += 1
-            item['asin'] = d.attr('data-sku')
+            # if count == 3:
+            #     break
+            item['asin'] = d.attr('data-id')
+            # print(item['asin'])
             item['create_time'] = datetime.now()
             item['plat'] = plat
             item['site'] = site
 
+            # item_cate主要抓详情页
             item_cate = item.copy()
-            item_cate['href'] = d('a').attr('href').split('?')[0]
+            item_cate['href'] = d('a.bindEvent.extendLink').attr('href').split('?')[0]
             item_cate['cate_task_code'] = task_code
             item_cate['bsr_index'] = count
+            # item_cate_list 存放 详情页信息
             item_cate_list.append(item_cate)
-        
+
             if 'sponsor' in d('.c-mention').text().lower():
                 item_cate['sp_tag'] = 'sp'
 
@@ -116,19 +121,28 @@ class SpiderConforamaSpider(scrapy.Spider):
             item_rank['page_index'] = count
             item_rank['page'] = page
 
-            item_rank['price'] = price_parse(d('.hideFromPro.price').text().replace('€','.'))
-            item_rank['reviews'] = extract_alp_number(d('.c-stars-result__text').text())
-            item_rank['rating'] = extract_number(d('.c-stars-result').text().split('étoiles sur')[0])
-            
+            # print("price===================")
+            # print(d('div.price-product.typo-prix.eco-price').html())  <class 'str'>
+            # print(type(d('div.price-product.typo-prix.eco-price ').html()))   <class 'str'>
+            # 有的列表没有刷出来 取到的值为空 后续str.split 报空指针异常
+            # item_rank['price'] = extract_price(d('div.price-product.typo-prix.eco-price').html())
+            # item_rank['reviews'] = extract_alp_number(d('.BVBrowserWebkit .stars').attr('data'))
+            # item_rank['rating'] = d('div#BVRRSummaryContainer span.stars').attr('data')
+            # item_rank['price'] = price_parse(d('.hideFromPro.price').text().replace('€','.'))
+            # item_rank['reviews'] = extract_alp_number(d('.c-stars-result__text').text())
+            # item_rank['rating'] = extract_number(d('.c-stars-result').text().split('étoiles sur')[0])
+
             if 'sponsor' in d('.c-mention').text().lower():
                 item_rank['sp_tag'] = 'sp'
 
             if 'discount à volonté' in d('.productCenterZone').text():
                 item_rank['sellertype'] = 'FBC'
-
             item_rank_list.append(item_rank)
 
         yield {'data':{'id': id, 'page': page},'type':'category_task'}
+        #item_cate_list 存放详情页信息 放到sp_plat_site_asin_info_task里面查询详情页信息
         yield {'data':item_cate_list,'type':'asin_task_add'}
+        #item_rank_list 存放列表页信息 sp_plat_site_asin_rank_conforma 里面的主要信息
         yield {'data':item_rank_list,'type':'asin_rank'}
+
 

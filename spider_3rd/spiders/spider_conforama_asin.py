@@ -4,6 +4,7 @@ from scrapy import Request
 
 from ..items import * 
 from ..db_utils import * 
+from ..parse_utils import *
 
 from sqlalchemy import create_engine,Column,Integer,TIMESTAMP,Float,String,Table,MetaData
 from sqlalchemy.ext.declarative import declarative_base
@@ -80,22 +81,41 @@ class SpiderConforamaSpider(scrapy.Spider):
         asin = response.meta['asin']
 
         doc = pq(response.text)
-        
+
         item_attr = {}
+        item_rank_list = []
 
         item_attr['plat'] = plat
-        item_attr['site'] = site
         item_attr['asin'] = asin
+        # item_rank 写入 sp_plat_site_asin_rank_conforama
+        item_rank = item_attr.copy()
+        item_rank['create_time'] = datetime.now()
+        # 抓取prive,rating,reviews
+        try:
+            item_rank['price'] = extract_price(doc('div.currentPrice.typo-prix').html())
+        except:
+            item_rank['price'] = '0';
 
-        item_attr['seller'] = doc('.fpSellerName').text()
+        item_rank['reviews'] = extract_number(doc('div.bv_numReviews_component_container div.bv_numReviews_text').text())
+        item_rank['rating'] = doc('div.bv_avgRating_component_container.notranslate').text()
+        item_rank_list.append(item_rank)
+        item_attr['site'] = site
+        item_attr['seller'] = doc('span.confoNameColor').text()
         item_attr['brand'] = item_attr['seller']
+        href = doc('img.zoomImg.cf-imgformat--zoom').eq(0).attr('src')
+        print(href)
+        item_attr['imghref'] = href
+
 
         if 'discount à volonté' in doc('.fpCDAVLayerInfo.jsOverlay span').text():
             item_attr['sellertype'] = 'FBC'
 
-        item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S") 
+        item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item_attr['update_time'] = item_attr['create_time']
+
 
         yield {'data':item_attr,'type':'asin_attr'}
 
         yield {'data':{'id': id},'type':'asin_task'}
+
+        yield {'data':item_rank_list,'type':'asin_rank'}
