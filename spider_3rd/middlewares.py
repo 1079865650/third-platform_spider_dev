@@ -127,13 +127,13 @@ class Spider3RdDownloaderMiddleware:
         js1 = "window.scrollTo(0, 1000)"
         self.driver.execute_script(js1)
         time.sleep(1)
-        js1 = "window.scrollTo(0, 2000)"
+        js1 = "window.scrollTo(0, 4000)"
         self.driver.execute_script(js1)
         time.sleep(1)
-        js1 = "window.scrollTo(0, 3000)"
+        js1 = "window.scrollTo(0, 8000)"
         self.driver.execute_script(js1)
         time.sleep(1)
-        js1 = "window.scrollTo(0, 5000)"
+        js1 = "window.scrollTo(0, 12000)"
         self.driver.execute_script(js1)
         time.sleep(1)
 
