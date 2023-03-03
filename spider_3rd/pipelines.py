@@ -12,6 +12,7 @@ from sqlalchemy.orm import sessionmaker
 from datetime import datetime
 from .items import *
 from .db_utils import *
+from dateutil.relativedelta import relativedelta
 
 
 class Spider3RdPipeline:
@@ -92,9 +93,10 @@ class AsinSpidersPipeline(object):
                             # 从asin_rank中修改表数据  列表页已经写入了一部分数据
                         self.sess.query(self.AsinRankConforama).filter(and_(self.AsinRankConforama.plat == i['plat'],
                                                                             self.AsinRankConforama.asin == i['asin'],
-                                                                            self.AsinRankConforama.create_time > datetime.now().strftime("%Y-%m-%d")
+                                                                            self.AsinRankConforama.price == None,
+                                                                            self.AsinRankConforama.create_time > (datetime.now() + relativedelta(days=0)).strftime("%Y-%m-%d")
                                                                             )) \
-                            .update({"price": i['price'], "rating": i['rating'], "reviews": i['reviews']})
+                            .update({"price": i['price'], "rating": i['rating'], "reviews": i['reviews'], "create_time": i["create_time"]})
                         # self.sess.add(self.AsinRankConforame(**i))
                         self.sess.commit()
                     else:
@@ -104,6 +106,10 @@ class AsinSpidersPipeline(object):
                     self.sess.add(self.AsinRankMano(**i))
                     self.sess.commit()
             return item
+
+        elif item['type'] == 'asin_rank_single':
+            self.sess.add(self.AsinRankConforama(**item['data']))
+            self.sess.commit()
 
         elif item['type'] == 'asin_img':
             for i in item['data']:

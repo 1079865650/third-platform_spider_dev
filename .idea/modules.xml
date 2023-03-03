@@ -2,7 +2,7 @@
 <project version="4">
   <component name="ProjectModuleManager">
     <modules>
-      <module fileurl="file://$PROJECT_DIR$/.idea/third-platform_spider_text.iml" filepath="$PROJECT_DIR$/.idea/third-platform_spider_text.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/third-platform_spider_dev.iml" filepath="$PROJECT_DIR$/.idea/third-platform_spider_dev.iml" />
     </modules>
   </component>
 </project>

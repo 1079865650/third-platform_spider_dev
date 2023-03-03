@@ -93,12 +93,12 @@ class Spider3RdDownloaderMiddleware:
         # driver_path = r'F:\dependency\chromedriver_win32 (109.0.5414.74)\chromedriver.exe'           #把浏览器驱动器放在任意位置都可以
         # browser_executable_path = 'C:\Program Files\Google\Chrome\Application\chrome.exe'
         browser_executable_path = None
-        if chrome_options != '':
+        if chrome_path != '':
             browser_executable_path = chrome_path  # 这里是你指定浏览器的路径
         # if chrome_path != '':
         #     options.binary_location = chrome_path  # 这里是你指定浏览器的路径
-
-        self.driver = uc.Chrome(driver_executable_path=driver_path,options = chrome_options, browser_executable_path=browser_executable_path)
+        print(driver_path, browser_executable_path)
+        self.driver = uc.Chrome(driver_executable_path=driver_path, options=chrome_options, browser_executable_path=browser_executable_path)
         # self.driver = webdriver.Chrome(executable_path=driver_path)
         # self.driver = webdriver.Chrome(executable_path=driver_path,options=chrome_options);
 
@@ -124,30 +124,31 @@ class Spider3RdDownloaderMiddleware:
         # 我们需要拦截请求，由selenium发起请求，将获取的数据封装成一个response对象。
         self.driver.get(request.url)
 
-        if 'conforama' in request.url:
-            time.sleep(3)
-
-        time.sleep(1)
-        js1 = "window.scrollTo(0, 1000)"
-        self.driver.execute_script(js1)
-        time.sleep(1)
-        js1 = "window.scrollTo(0, 4000)"
-        self.driver.execute_script(js1)
-        time.sleep(1)
-        js1 = "window.scrollTo(0, 8000)"
-        self.driver.execute_script(js1)
-        time.sleep(1)
-        js1 = "window.scrollTo(0, 12000)"
-        self.driver.execute_script(js1)
-        time.sleep(1)
-
-        if 'conforama' in request.url:
-            time.sleep(3)
+        # if 'conforama' in request.url:
+        #     print("休眠了3秒======================")
+        #     time.sleep(3)
+        #
+        # time.sleep(1)
+        # js1 = "window.scrollTo(0, 1000)"
+        # self.driver.execute_script(js1)
+        # time.sleep(1)
+        # js1 = "window.scrollTo(0, 3000)"
+        # self.driver.execute_script(js1)
+        # time.sleep(1)
+        # js1 = "window.scrollTo(0, 5000)"
+        # self.driver.execute_script(js1)
+        # time.sleep(1)
+        # js1 = "window.scrollTo(0, 8000)"
+        # self.driver.execute_script(js1)
+        # time.sleep(1)
+        time.sleep(2)
+        # if 'conforama' in request.url:
+        #     time.sleep(3)
 
         if 'CAPTCHA' in self.driver.page_source:
             time.sleep(360)
 
-        response = HtmlResponse(request.url,body=self.driver.page_source,request=request,encoding='utf-8')
+        response = HtmlResponse(request.url, body=self.driver.page_source, request=request, encoding='utf-8')
 
         return response
 
@@ -174,7 +175,8 @@ class Spider3RdDownloaderMiddleware:
         spider.logger.info('Spider opened: %s' % spider.name)
 
     def spider_closed(self):
-        self.driver.quit()
+        # self.driver.quit()
+        pass
 
 
 from scrapy.http.response.html import HtmlResponse

@@ -49,12 +49,15 @@ class SpiderManoSpider(scrapy.Spider):
 
     def start_requests(self):
         task_list = []
-        for category in self.categorytasks[:1]:
+        count = 0
+        for category in self.categorytasks[15:20]:
             # for page in range(1,category.link_maxpage+1):
-            for page in range(1, 2):
+            for page in range(1, 4):
                 task_list.append({"url": category.category_link + '?page=' + str(page),
                                   "meta": {'id': category.id, 'task_code': category.task_code,
                                             'plat': category.plat, 'site': category.site, 'page': page}})
+                count += 1
+                print('第'+str(count)+'条链接')
         for t in task_list:
             yield Request(url=t['url'], callback=self.parse, meta=t['meta'], headers=self.headers_html)
 
@@ -99,12 +102,15 @@ class SpiderManoSpider(scrapy.Spider):
             item_rank['rank2'] = ''
             item_rank['page_index'] = count
             item_rank['page'] = page
-            price = d('span[data-testid="price-main"] span.c5DauHw').text() + '.' + d('span[data-testid="price-main"] span.b8m9Ab').text()
+            price = d('span[data-testid="price-main"] span.c2nS1G8').text() + '.' + d('span[data-testid="price-main"] span.mnYZmE').text()
             item_rank['price'] = add_decimal(price)
-            item_rank['reviews'] = extract_number(d('div.TQmDRr.XNipqx.ses_q_.h-K90b').text())
-            rating = str((d('span.bh49LQ').attr('aria-label')))[:3]
-            if '/' in rating:
-                rating = rating[:1]
+            item_rank['reviews'] = extract_number(d('div.c4RbFAh.pWFNdu.VP-gp_.SZJsp3').text())
+            item_rank['sp_tag'] = d('div.c5MHx7P.tIkne3 span.iq94bJ').text()
+            rating = d('span.AFutZ6').attr('aria-label')
+            if rating is not None:
+                rating = rating[:3]
+                if '/' in rating:
+                    rating = rating[:1]
             item_rank['rating'] = rating
             item_rank_list.append(item_rank)
 
@@ -112,11 +118,13 @@ class SpiderManoSpider(scrapy.Spider):
             brand = d('img[alt]').eq(1).attr('alt')
             item_attr['seller'] = brand
             item_attr['brand'] = brand
-            item_attr['imghref'] = doc('img').attr('src')
+            item_attr['imghref'] = d('img.rhRMkC.Xoiu6o').attr('src')
             item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
             item_attr['update_time'] = item_attr['create_time']
+            # print(item_attr)
             yield {'data': item_attr, 'type': 'asin_attr'}
-
+        # print(item_rank_list)
+        # sys.exit()
         yield {'data': {'id': id, 'page': page}, 'type': 'category_task'}
         yield {'data': item_cate_list, 'type': 'asin_task_add'}
         yield {'data': item_rank_list, 'type': 'asin_rank'}

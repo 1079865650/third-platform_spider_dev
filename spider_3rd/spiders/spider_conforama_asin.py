@@ -24,7 +24,7 @@ class SpiderConforamaSpider(scrapy.Spider):
     sess = session()
     asintasks = sess.query(AsinTask, AsinTask.id, AsinTask.asin, AsinTask.href, AsinTask.plat, AsinTask.site) \
         .outerjoin(AsinAttr, and_(AsinTask.asin == AsinAttr.asin, AsinTask.site == AsinAttr.site)) \
-        .filter(and_(AsinTask.status == None, AsinTask.plat == 'Conforama')).distinct().limit(5)
+        .filter(and_(AsinTask.status == None, AsinTask.plat == 'Conforama')).distinct()
     sess.close()
 
     headers_html = {
@@ -45,9 +45,11 @@ class SpiderConforamaSpider(scrapy.Spider):
         'upgrade-insecure-requests': '1',
         'user-agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/97.0.4692.99 Safari/537.36',
     }
-
     def start_requests(self):
+        count1 = 0
         for asin in self.asintasks:
+            count1 += 1
+            print('开始第'+str(count1)+'链接')
             yield Request(url=asin.href, callback=self.parse,
                           meta={'id': asin.id, 'asin': asin.asin, 'plat': asin.plat, 'site': asin.site},
                           headers=self.headers_html)
@@ -76,8 +78,8 @@ class SpiderConforamaSpider(scrapy.Spider):
         except:
             item_rank['price'] = '0'
         item_rank['reviews'] = extract_number(
-            doc('div.bv_numReviews_component_container div.bv_numReviews_text').text())
-        item_rank['rating'] = doc('div.bv_avgRating_component_container.notranslate').text()
+            doc('button#ratings-summary div.bv_numReviews_text').text())
+        item_rank['rating'] = doc('button#ratings-summary div.bv_avgRating_component_container.notranslate').text()
         item_rank_list.append(item_rank)
 
         item_attr['site'] = site
@@ -89,7 +91,11 @@ class SpiderConforamaSpider(scrapy.Spider):
             item_attr['sellertype'] = 'FBC'
         item_attr['create_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         item_attr['update_time'] = item_attr['create_time']
+        # print(item_attr, "========item_attr")
+        # print(item_rank_list, "=======item_rank_list")
 
         yield {'data': item_attr, 'type': 'asin_attr'}
         yield {'data': {'id': id}, 'type': 'asin_task'}
         yield {'data': item_rank_list, 'type': 'asin_rank'}
+        # yield {'data': item_rank_list, 'type': 'asin_rank_single'}
+
