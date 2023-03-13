@@ -62,7 +62,7 @@ class SpiderConforamaSpider(scrapy.Spider):
         plat = response.meta['plat']
         site = response.meta['site']
         asin = response.meta['asin']
-        sp_tag = response.meta['sp_tag']
+        sp_tag = response.meta['sp_tag'] #
         doc = pq(response.text)
 
         item_attr = {}

@@ -1,0 +1,65 @@
+Index: spider_3rd/parse_utils.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>from datetime import datetime\r\n\r\nimport re\r\n\r\ndef extract_alp_number(string_value):\r\n\r\n    string_value = re.sub(r'[^a-zA-Z0-9]', '', string_value)\r\n\r\n    return string_value\r\n\r\ndef extract_number(string_value):\r\n\r\n    string_value = re.sub(r'[^0-9]', '', string_value)\r\n\r\n    return string_value\r\n\r\ndef extract_price(string_value):\r\n    #  处理 '\\n\\t\\t\\t\\t\\t89<sup>€99</sup>\\n\\t\\t\\t' or '199<sup>€</sup>' 转换为89.99  199.00\r\n    # print(type(string_value)) <class 'str'>\r\n    price_split = str(string_value).split(\"€\")\r\n    price_pre = re.sub(r'[^0-9]', '', price_split[0])\r\n    price_suf = re.sub(r'[^0-9]', '', price_split[1])\r\n    if price_suf == '':\r\n        price_suf = '00'\r\n    price = price_pre+'.'+price_suf\r\n    return price\r\n\r\ndef add_decimal(string_value):\r\n    # 处理 99.  改成99.00\r\n    # print(\"string_value==================\"+string_value)\r\n    string_value = string_value.replace(' ', '')\r\n    index = string_value.index('.')+1\r\n    length = len(string_value)\r\n    if index == length:\r\n        string_value = string_value + '00'\r\n    return string_value\r\ndef price_parse(string_value):\r\n\t# 形如 '169,99.' 处理\r\n\r\n    if string_value[-1] == '.':\r\n        string_value = string_value[0:-1]\r\n    if string_value[-3] == ',':\r\n        string_value = string_value.replace(string_value[-3:], string_value[-3:].replace(',','.'))\r\n\r\n    return string_value\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/spider_3rd/parse_utils.py b/spider_3rd/parse_utils.py
+--- a/spider_3rd/parse_utils.py	
++++ b/spider_3rd/parse_utils.py	
+@@ -2,18 +2,19 @@
+ 
+ import re
+ 
++
+ def extract_alp_number(string_value):
+-
+     string_value = re.sub(r'[^a-zA-Z0-9]', '', string_value)
+ 
+     return string_value
+ 
++
+ def extract_number(string_value):
+-
+     string_value = re.sub(r'[^0-9]', '', string_value)
+ 
+     return string_value
+ 
++
+ def extract_price(string_value):
+     #  处理 '\n\t\t\t\t\t89<sup>€99</sup>\n\t\t\t' or '199<sup>€</sup>' 转换为89.99  199.00
+     # print(type(string_value)) <class 'str'>
+@@ -22,25 +23,26 @@
+     price_suf = re.sub(r'[^0-9]', '', price_split[1])
+     if price_suf == '':
+         price_suf = '00'
+-    price = price_pre+'.'+price_suf
++    price = price_pre + '.' + price_suf
+     return price
+ 
++
+ def add_decimal(string_value):
+     # 处理 99.  改成99.00
+     # print("string_value=================="+string_value)
+     string_value = string_value.replace(' ', '')
+-    index = string_value.index('.')+1
++    index = string_value.index('.') + 1
+     length = len(string_value)
+     if index == length:
+         string_value = string_value + '00'
+     return string_value
++
++
+ def price_parse(string_value):
+-	# 形如 '169,99.' 处理
+-
++    # 形如 '169,99.' 处理
+     if string_value[-1] == '.':
+         string_value = string_value[0:-1]
+     if string_value[-3] == ',':
+-        string_value = string_value.replace(string_value[-3:], string_value[-3:].replace(',','.'))
++        string_value = string_value.replace(string_value[-3:], string_value[-3:].replace(',', '.'))
+ 
+     return string_value
+-
