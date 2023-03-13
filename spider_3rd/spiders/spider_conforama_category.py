@@ -52,9 +52,9 @@ class SpiderConforamaSpider(scrapy.Spider):
         task_list = []
         print(self.categorytasks)
         count = 0
-        for category in self.categorytasks[:5]:
+        for category in self.categorytasks[:2]:
             # for page in range(1, category.link_maxpage+1):
-            for page in range(1, 5):
+            for page in range(1, 3):
                 task_list.append({"url": category.category_link + '&page=' + str(page),
                                   "meta": {'id': category.id, 'task_code': category.task_code,
                                            'plat': category.plat, 'site': category.site, 'page': page}})
@@ -90,7 +90,6 @@ class SpiderConforamaSpider(scrapy.Spider):
             # print(item_cate)
             if 'sponsor' in d('.c-mention').text().lower():
                 item_cate['sp_tag'] = 'sp'
-            item_cate_list.append(item_cate)
 
 
             item_rank = item.copy()
@@ -108,6 +107,9 @@ class SpiderConforamaSpider(scrapy.Spider):
             # if sp_tag != '' and sp_tag is not None:
             #     item_rank['sp_tag'] = 'sp'
             item_rank['sellertype'] = d('div.detail-product div.c-r_seller div.c-r_sold.c-r_sold--other span').text()
+            item_cate['sp_tag'] = item_rank['sellertype']
+            # item_rank['seller'] = item_rank['sellertype']
+            # item_rank['brand'] = item_rank['sellertype']
             item_rank['page_index'] = count
             item_rank['page'] = page
             # if 'sponsor' in d('.c-mention').text().lower():
@@ -115,6 +117,7 @@ class SpiderConforamaSpider(scrapy.Spider):
             # if 'discount à volonté' in d('.productCenterZone').text():
             #     item_rank['sellertype'] = 'FBC'
             item_rank_list.append(item_rank)
+            item_cate_list.append(item_cate)
         # print(item_rank_list)
         # sys.exit()
 
